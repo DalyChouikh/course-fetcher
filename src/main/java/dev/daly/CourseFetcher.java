@@ -35,7 +35,7 @@ public class CourseFetcher {
     private static void createDirectoriesWindows(JsonNode coursesJson) throws IOException, InterruptedException {
         for(JsonNode subject : coursesJson){
             String subjectName = subject.get("designation").asText();
-            String downloadPath = ".\\courses\\'" + subjectName.split("/")[0] + "'\\";
+            String downloadPath = ".\\courses\\'" + subjectName.split("/")[0].trim() + "'\\";
             createDirectories(subject, downloadPath);
         }
     }
@@ -58,12 +58,12 @@ public class CourseFetcher {
         for (JsonNode course : subject.get("courses")){
             String courseName = formatFileName(course.get("title").asText());
             String courseURL ="https://issatso.rnu.tn/bo/storage/app/public/courses/" +
-                    course.get("folder").asText().split("/")[1] + "/" ;
-            String extension = course.get("folder").asText().split("\\.")[1];
+                    course.get("folder").asText().split("/")[1] ;
+            String courseFileExtension = course.get("folder").asText().split("\\.")[1];
             URL url = URI.create(courseURL).toURL();
-            Path destination = Path.of(downloadPath + courseName  + "." + extension);
+            Path destination = Path.of(downloadPath + courseName  + "." + courseFileExtension);
             Files.copy(url.openStream(), destination, StandardCopyOption.REPLACE_EXISTING);
-            System.out.println("Downloaded: " + courseName + "." + extension);
+            System.out.println("Downloaded: " + courseName + "." + courseFileExtension);
         }
     }
 
