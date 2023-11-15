@@ -52,8 +52,6 @@ public class CourseFetcher {
         Path path = Path.of(downloadPath);
         if(!Files.exists(path)){
             Files.createDirectories(path);
-        }else {
-            System.out.println("Directory already exists: " + downloadPath);
         }
         for (JsonNode course : subject.get("courses")){
             String courseName = formatFileName(course.get("title").asText());
