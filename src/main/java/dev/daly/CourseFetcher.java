@@ -8,28 +8,31 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 
 public class CourseFetcher {
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private static String formatFileName(String fileName){
         return  fileName.replaceAll("[/?*:|<>\\\\]", "");
     }
 
-    private static JsonNode readFromFile(){
-            String coursesJsonPath = "courses.json";
-        try{
-            ObjectMapper mapper = new ObjectMapper();
-            BufferedReader reader = new BufferedReader(new FileReader(coursesJsonPath));
-            return mapper.readTree(reader.lines().collect(Collectors.joining("\n")));
-        }catch (IOException e){
-            System.out.println("Error reading file: " + coursesJsonPath);
-            System.exit(1);
-        }
-        return null;
+    private static JsonNode fetchCoursesJson(String token) throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://issatso.rnu.tn/bo/public/api/student/courses"))
+                .header("Authorization", "Bearer " + token)
+                .method("GET", HttpRequest.BodyPublishers.noBody())
+                .build();
+        HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        return mapper.readTree(response.body());
     }
 
     private static void createDirectoriesWindows(JsonNode coursesJson) throws IOException, InterruptedException {
@@ -67,7 +70,10 @@ public class CourseFetcher {
 
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        JsonNode coursesJson = readFromFile();
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter your token: ");
+        String token = scanner.nextLine();
+        JsonNode coursesJson = fetchCoursesJson(token);
         if(System.getProperty("os.name").toLowerCase().contains("windows"))
             createDirectoriesWindows(coursesJson);
         else createDirectoriesLinux(coursesJson);
